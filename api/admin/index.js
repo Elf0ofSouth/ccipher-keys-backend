@@ -1,19 +1,26 @@
 // ============================================================
 // Cipher Project — API do PAINEL de revenda
 //
+// Endereço FIXO: /api/admin  (a sub-rota vai no parâmetro ?r=...)
+// Ex.: /api/admin?r=keys/generate  ·  /api/admin?r=stats
+//
+// Por que assim, e não /api/admin/keys/generate?
+// A Vercel, dependendo do build, só casa UM nível de caminho nas
+// rotas catch-all ([...path]) — então caminhos fundos davam 404.
+// Endereço fixo + sub-rota por query sempre roteia certo.
+//
 // Tudo aqui exige:  Authorization: Bearer <CIPHER_ADMIN_TOKEN>
 //
-//   POST   /api/admin/keys/generate
-//   GET    /api/admin/keys?status=&plan=&q=&batch=&limit=&offset=
-//   GET    /api/admin/keys/:id
-//   DELETE /api/admin/keys/:id
-//   POST   /api/admin/keys/:id/revoke
-//   POST   /api/admin/keys/:id/unrevoke
-//   POST   /api/admin/keys/:id/reset-devices
-//   POST   /api/admin/keys/:id/extend        { days } ou { seconds }
-//   GET    /api/admin/stats
-//   GET    /api/admin/events
-//   GET|POST /api/admin/packages
+//   r=keys/generate            (POST)
+//   r=keys                     (GET) ?status=&plan=&q=&batch=&limit=&offset=
+//   r=keys/:id                 (GET | DELETE)
+//   r=keys/:id/revoke          (POST)
+//   r=keys/:id/unrevoke        (POST)
+//   r=keys/:id/reset-devices   (POST)
+//   r=keys/:id/extend          (POST) { days } ou { seconds }
+//   r=stats                    (GET)
+//   r=events                   (GET)
+//   r=packages                 (GET | POST)
 // ============================================================
 
 import { getSupabaseAdmin } from '../../lib/supabase.js';
@@ -27,14 +34,14 @@ export default async function handler(req, res) {
     return sendJson(res, { error: 'unauthorized', message: 'Token de admin inválido ou ausente.' }, 401);
   }
 
-  // Deriva a rota direto da URL (ex.: "/api/admin/keys/generate" -> "keys/generate").
-  // Ler de req.url é à prova de falha: não depende de como a Vercel preenche
-  // req.query nas rotas catch-all, que varia entre builds.
-  const pathname = new URL(req.url, 'http://localhost').pathname;
-  const route = pathname
-    .replace(/^\/+/, '')          // tira barra inicial
-    .replace(/^api\/admin\/?/, '') // tira o prefixo /api/admin
-    .replace(/^\/+|\/+$/g, '');    // tira barras sobrando nas pontas
+  // A sub-rota vem em ?r=... . Se por algum motivo não vier, cai para
+  // ler do caminho da URL (compatível com o formato antigo /api/admin/x).
+  const url = new URL(req.url, 'http://localhost');
+  let route = url.searchParams.get('r') ?? '';
+  if (!route) {
+    route = url.pathname.replace(/^\/+/, '').replace(/^api\/admin\/?/, '');
+  }
+  route = route.replace(/^\/+|\/+$/g, '');
   const method = req.method;
 
   let sb;
@@ -45,7 +52,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    return await handle(sb, req, res, route, method);
+    return await handle(sb, req, res, url, route, method);
   } catch (err) {
     const detalhe = err?.message ?? String(err);
     console.error('[cipher/admin]', err);
@@ -60,9 +67,7 @@ export default async function handler(req, res) {
   }
 }
 
-async function handle(sb, req, res, route, method) {
-  const url = new URL(req.url, 'http://localhost');
-
+async function handle(sb, req, res, url, route, method) {
   // ---------------- Gerar keys em lote ----------------
   if (route === 'keys/generate' && method === 'POST') {
     const b = await readBody(req);

@@ -211,8 +211,20 @@ function toast(msg, isError) {
   setTimeout(() => el.remove(), 3800);
 }
 
+// Converte "/api/admin/keys/generate" e "/api/admin/keys?status=x" no
+// formato de endereço fixo + sub-rota por query: "/api/admin?r=keys/generate".
+// Isso evita o 404 da Vercel em caminhos de mais de um nível.
+function toAdminUrl(path) {
+  let sub = String(path).replace(/^\/api\/admin\/?/, '');
+  let qs = '';
+  const qi = sub.indexOf('?');
+  if (qi >= 0) { qs = sub.slice(qi + 1); sub = sub.slice(0, qi); }
+  sub = sub.replace(/^\/+|\/+$/g, '');
+  return '/api/admin?r=' + encodeURIComponent(sub) + (qs ? '&' + qs : '');
+}
+
 async function api(path, options = {}) {
-  const res = await fetch(path, {
+  const res = await fetch(toAdminUrl(path), {
     ...options,
     headers: {
       'Content-Type': 'application/json',
