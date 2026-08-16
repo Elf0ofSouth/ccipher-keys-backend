@@ -27,9 +27,14 @@ export default async function handler(req, res) {
     return sendJson(res, { error: 'unauthorized', message: 'Token de admin inválido ou ausente.' }, 401);
   }
 
-  // Vercel entrega [...path] como array em req.query.path.
-  const parts = Array.isArray(req.query.path) ? req.query.path : [req.query.path].filter(Boolean);
-  const route = parts.join('/');
+  // Deriva a rota direto da URL (ex.: "/api/admin/keys/generate" -> "keys/generate").
+  // Ler de req.url é à prova de falha: não depende de como a Vercel preenche
+  // req.query nas rotas catch-all, que varia entre builds.
+  const pathname = new URL(req.url, 'http://localhost').pathname;
+  const route = pathname
+    .replace(/^\/+/, '')          // tira barra inicial
+    .replace(/^api\/admin\/?/, '') // tira o prefixo /api/admin
+    .replace(/^\/+|\/+$/g, '');    // tira barras sobrando nas pontas
   const method = req.method;
 
   let sb;
