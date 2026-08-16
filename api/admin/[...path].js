@@ -293,5 +293,15 @@ async function handle(sb, req, res, route, method) {
     }
   }
 
-  return sendJson(res, { error: 'not_found', message: `Rota admin desconhecida: ${method} /${route}` }, 404);
+  return sendJson(
+    res,
+    {
+      error: 'not_found',
+      // DIAGNÓSTICO temporário: mostra o que a Vercel entregou, para
+      // descobrir de onde tirar a rota. Some quando o roteamento acertar.
+      message: `[v2] Rota admin desconhecida: ${method} /${route} · req.url=${req.url} · query.path=${JSON.stringify(req.query?.path)}`,
+      seen: { url: req.url, route, query: req.query },
+    },
+    404,
+  );
 }
