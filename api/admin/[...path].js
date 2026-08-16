@@ -24,7 +24,17 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return preflight(res);
 
   if (!isAdmin(req)) {
-    return sendJson(res, { error: 'unauthorized', message: 'Token de admin inválido ou ausente.' }, 401);
+    return sendJson(
+      res,
+      {
+        error: 'unauthorized',
+        message: 'Token de admin inválido ou ausente.',
+        // DIAGNÓSTICO temporário: revela o que a Vercel entrega, mesmo sem token.
+        seen_url: req.url,
+        seen_query: req.query ?? null,
+      },
+      401,
+    );
   }
 
   // Deriva a rota direto da URL (ex.: "/api/admin/keys/generate" -> "keys/generate").
