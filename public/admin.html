@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Cipher Project — Painel</title>
+<style>
+  :root{
+    --brand:#8B5CF6; --brand-dark:#7C3AED; --brand-soft:rgba(139,92,246,.14);
+    --bg:#0B0A10; --panel:#131120; --panel-2:#1A1729; --line:rgba(255,255,255,.09);
+    --text:#EDEAF6; --muted:#9791AE;
+    --ok:#34D399; --warn:#FBBF24; --danger:#F87171; --info:#60A5FA;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  a{color:var(--brand)}
+  button{font:inherit;cursor:pointer;border:none;border-radius:10px;padding:9px 14px;
+    background:var(--brand);color:#fff;font-weight:600;transition:.15s}
+  button:hover{background:var(--brand-dark)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  button.ghost:hover{background:var(--brand-soft);border-color:var(--brand)}
+  button.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+  button.danger{background:transparent;border:1px solid rgba(248,113,113,.4);color:var(--danger)}
+  button.danger:hover{background:rgba(248,113,113,.14)}
+  input,select,textarea{font:inherit;background:var(--panel-2);color:var(--text);
+    border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand)}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  .wrap{max-width:1240px;margin:0 auto;padding:22px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+  .logo{width:34px;height:34px;border-radius:9px;flex:none;
+    background:linear-gradient(135deg,var(--brand),#4C1D95);
+    display:grid;place-items:center;font-weight:800;color:#fff}
+  h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.2px}
+  h1 small{display:block;font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.4px}
+  .spacer{flex:1}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;margin-bottom:16px}
+  .card h2{font-size:14px;margin:0 0 14px;font-weight:700;
+    display:flex;align-items:center;gap:8px}
+  .card h2 .dot{width:6px;height:6px;border-radius:50%;background:var(--brand)}
+  .grid{display:grid;gap:12px}
+  .stats{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .stat b{display:block;font-size:26px;font-weight:700;letter-spacing:-.5px}
+  .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .row>div{flex:1;min-width:130px}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;
+    color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+  tr:hover td{background:rgba(255,255,255,.02)}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+  .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.4px}
+  .p-unused{background:rgba(96,165,250,.15);color:var(--info)}
+  .p-active{background:rgba(52,211,153,.15);color:var(--ok)}
+  .p-expired{background:rgba(251,191,36,.15);color:var(--warn)}
+  .p-revoked{background:rgba(248,113,113,.15);color:var(--danger)}
+  .muted{color:var(--muted)}
+  .toast{position:fixed;right:18px;bottom:18px;background:var(--panel-2);
+    border:1px solid var(--brand);border-radius:12px;padding:12px 16px;
+    box-shadow:0 16px 48px rgba(0,0,0,.6);max-width:340px;z-index:99;font-size:13px}
+  .toast.err{border-color:var(--danger)}
+  #gate{max-width:380px;margin:16vh auto;text-align:center}
+  #gate .logo{margin:0 auto 14px;width:48px;height:48px;font-size:20px}
+  .hide{display:none!important}
+  .keys-out{background:#0A0912;border:1px solid var(--brand);border-radius:10px;
+    padding:12px;max-height:260px;overflow:auto;white-space:pre;font-size:12.5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.7}
+  .actions{display:flex;gap:5px;flex-wrap:wrap}
+  .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .tabs button{background:transparent;border:1px solid var(--line);color:var(--muted);font-size:13px}
+  .tabs button.on{background:var(--brand-soft);border-color:var(--brand);color:var(--text)}
+  @media(max-width:640px){ .wrap{padding:14px} .row>div{min-width:100%} }
+</style>
+</head>
+<body>
+
+<!-- ============ Login ============ -->
+<div id="gate" class="wrap">
+  <div class="logo">C</div>
+  <h1 style="text-align:center">Cipher Project<small>PAINEL DE REVENDA</small></h1>
+  <div class="card" style="margin-top:18px;text-align:left">
+    <label for="tok">Token de administrador</label>
+    <input id="tok" type="password" placeholder="Cole o CIPHER_ADMIN_TOKEN" autocomplete="off">
+    <button style="width:100%;margin-top:12px" onclick="login()">Entrar</button>
+    <p class="muted" style="font-size:12px;margin:12px 0 0">
+      Definido nas variáveis de ambiente da Vercel, em <code>CIPHER_ADMIN_TOKEN</code>.
+    </p>
+  </div>
+</div>
+
+<!-- ============ Painel ============ -->
+<div id="app" class="wrap hide">
+  <header>
+    <div class="logo">C</div>
+    <h1>Cipher Project<small>PAINEL DE REVENDA</small></h1>
+    <div class="spacer"></div>
+    <button class="ghost sm" onclick="refreshAll()">Atualizar</button>
+    <button class="ghost sm" onclick="logout()">Sair</button>
+  </header>
+
+  <div class="grid stats" id="stats"></div>
+
+  <!-- Gerar keys -->
+  <div class="card">
+    <h2><span class="dot"></span>Gerar keys</h2>
+    <div class="row">
+      <div>
+        <label for="g-plan">Plano</label>
+        <select id="g-plan">
+          <option value="trial15">Teste — 15 minutos</option>
+          <option value="daily">Diária — 1 dia</option>
+          <option value="weekly">Semanal — 7 dias</option>
+          <option value="monthly" selected>Mensal — 30 dias</option>
+          <option value="yearly">Anual — 365 dias</option>
+          <option value="lifetime">Vitalícia</option>
+        </select>
+      </div>
+      <div style="max-width:110px">
+        <label for="g-qty">Quantidade</label>
+        <input id="g-qty" type="number" min="1" max="500" value="10">
+      </div>
+      <div style="max-width:120px">
+        <label for="g-dev">Dispositivos</label>
+        <input id="g-dev" type="number" min="1" max="10" placeholder="padrão">
+      </div>
+      <div>
+        <label for="g-batch">Lote</label>
+        <input id="g-batch" placeholder="ex: promo-agosto">
+      </div>
+      <div>
+        <label for="g-note">Observação</label>
+        <input id="g-note" placeholder="ex: cliente João / Kirvano">
+      </div>
+      <div style="flex:none">
+        <button onclick="generate()" id="g-btn">Gerar</button>
+      </div>
+    </div>
+    <div id="g-out" class="hide" style="margin-top:14px">
+      <div class="row" style="margin-bottom:8px">
+        <div class="muted" id="g-count"></div>
+        <div style="flex:none"><button class="ghost sm" onclick="copyKeys()">Copiar todas</button></div>
+      </div>
+      <div class="keys-out" id="g-keys"></div>
+    </div>
+  </div>
+
+  <!-- Keys -->
+  <div class="card">
+    <h2><span class="dot"></span>Keys</h2>
+    <div class="tabs" id="filters">
+      <button class="on" data-status="">Todas</button>
+      <button data-status="unused">Não usadas</button>
+      <button data-status="active">Ativas</button>
+      <button data-status="expired">Expiradas</button>
+      <button data-status="revoked">Revogadas</button>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <div><input id="q" placeholder="Buscar por key, nome ou observação…"
+        onkeydown="if(event.key==='Enter')loadKeys()"></div>
+      <div style="flex:none"><button class="ghost" onclick="loadKeys()">Buscar</button></div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Key</th><th>Plano</th><th>Status</th><th>Expira</th>
+          <th>Disp.</th><th>Lote / Obs.</th><th>Ações</th>
+        </tr></thead>
+        <tbody id="keys-body"></tbody>
+      </table>
+    </div>
+    <div id="keys-info" class="muted" style="margin-top:10px;font-size:12px"></div>
+  </div>
+
+  <!-- Eventos -->
+  <div class="card">
+    <h2><span class="dot"></span>Atividade recente</h2>
+    <div class="table-scroll">
+      <table><thead><tr>
+        <th>Quando</th><th>Evento</th><th>Key</th><th>Detalhe</th><th>IP</th>
+      </tr></thead><tbody id="events-body"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ------------------------------------------------------------
+// Estado + helpers
+// ------------------------------------------------------------
+let TOKEN = sessionStorage.getItem('cipher_admin_token') || '';
+let statusFilter = '';
+let lastKeys = [];
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g,
+  (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+function toast(msg, isError) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (isError ? ' err' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3800);
+}
+
+async function api(path, options = {}) {
+  const res = await fetch(path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + TOKEN,
+      ...(options.headers || {}),
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { logout(); throw new Error('Token inválido.'); }
+  if (!res.ok) throw new Error(data.message || data.error || ('Erro ' + res.status));
+  return data;
+}
+
+// ------------------------------------------------------------
+// Login
+// ------------------------------------------------------------
+async function login() {
+  TOKEN = $('tok').value.trim();
+  if (!TOKEN) return toast('Informe o token.', true);
+  try {
+    await api('/api/admin/stats');
+    sessionStorage.setItem('cipher_admin_token', TOKEN);
+    $('gate').classList.add('hide');
+    $('app').classList.remove('hide');
+    refreshAll();
+  } catch (e) { toast(e.message, true); }
+}
+
+function logout() {
+  sessionStorage.removeItem('cipher_admin_token');
+  TOKEN = '';
+  $('app').classList.add('hide');
+  $('gate').classList.remove('hide');
+}
+
+// ------------------------------------------------------------
+// Estatísticas
+// ------------------------------------------------------------
+async function loadStats() {
+  const d = await api('/api/admin/stats');
+  const by = Object.fromEntries((d.by_status || []).map((r) => [r.status, r.count]));
+  const cards = [
+    ['Total de keys', d.total],
+    ['Ativas', by.active || 0],
+    ['Não usadas', by.unused || 0],
+    ['Expiradas', by.expired || 0],
+    ['Revogadas', by.revoked || 0],
+    ['Online agora', d.online_now],
+  ];
+  $('stats').innerHTML = cards
+    .map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`)
+    .join('');
+}
+
+// ------------------------------------------------------------
+// Gerar keys
+// ------------------------------------------------------------
+async function generate() {
+  const btn = $('g-btn');
+  btn.disabled = true;
+  btn.textContent = 'Gerando…';
+  try {
+    const payload = {
+      plan: $('g-plan').value,
+      quantity: parseInt($('g-qty').value, 10) || 1,
+      batch: $('g-batch').value.trim() || undefined,
+      note: $('g-note').value.trim() || undefined,
+      max_devices: parseInt($('g-dev').value, 10) || undefined,
+    };
+    const d = await api('/api/admin/keys/generate', { method: 'POST', body: JSON.stringify(payload) });
+    lastKeys = d.keys;
+    $('g-out').classList.remove('hide');
+    $('g-count').textContent = `${d.quantity} key(s) — ${d.plan_label} — lote "${d.batch}"`;
+    $('g-keys').textContent = d.keys.join('\n');
+    toast(`${d.quantity} key(s) gerada(s).`);
+    loadStats();
+    loadKeys();
+  } catch (e) { toast(e.message, true); }
+  btn.disabled = false;
+  btn.textContent = 'Gerar';
+}
+
+function copyKeys() {
+  navigator.clipboard.writeText(lastKeys.join('\n'))
+    .then(() => toast('Keys copiadas.'))
+    .catch(() => toast('Não foi possível copiar.', true));
+}
+
+// ------------------------------------------------------------
+// Listagem de keys
+// ------------------------------------------------------------
+function fmtDate(iso) {
+  if (!iso) return '<span class="muted">—</span>';
+  const d = new Date(iso);
+  const left = d.getTime() - Date.now();
+  const txt = d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  if (left <= 0) return `<span style="color:var(--warn)">${txt}</span>`;
+  const mins = Math.floor(left / 60000);
+  const rel = mins < 60 ? `${mins}min`
+    : mins < 1440 ? `${Math.floor(mins / 60)}h`
+    : `${Math.floor(mins / 1440)}d`;
+  return `${txt} <span class="muted">(${rel})</span>`;
+}
+
+async function loadKeys() {
+  const params = new URLSearchParams({ limit: '200' });
+  if (statusFilter) params.set('status', statusFilter);
+  const q = $('q').value.trim();
+  if (q) params.set('q', q);
+
+  const d = await api('/api/admin/keys?' + params);
+  $('keys-info').textContent = `Mostrando ${d.keys.length} de ${d.total}.`;
+
+  $('keys-body').innerHTML = d.keys.length
+    ? d.keys.map((k) => `
+      <tr>
+        <td><code>${esc(k.license_key)}</code>
+          <button class="ghost sm" style="margin-left:6px"
+            onclick="navigator.clipboard.writeText('${esc(k.license_key)}');toast('Copiada.')">⧉</button></td>
+        <td>${esc(k.plan)}</td>
+        <td><span class="pill p-${esc(k.status)}">${esc(k.status)}</span></td>
+        <td>${k.duration_seconds === 0 ? '<span class="muted">vitalícia</span>' : fmtDate(k.expires_at)}</td>
+        <td>${k.device_count}/${k.max_devices}</td>
+        <td class="muted" style="font-size:12px">${esc(k.batch || '')}${k.note ? '<br>' + esc(k.note) : ''}</td>
+        <td><div class="actions">
+          ${k.status === 'revoked'
+            ? `<button class="ghost sm" onclick="act(${k.id},'unrevoke')">Reativar</button>`
+            : `<button class="danger sm" onclick="act(${k.id},'revoke')">Revogar</button>`}
+          <button class="ghost sm" onclick="act(${k.id},'reset-devices')" title="Cliente trocou de PC">Liberar disp.</button>
+          <button class="ghost sm" onclick="extend(${k.id})">+dias</button>
+          <button class="danger sm" onclick="del(${k.id})">✕</button>
+        </div></td>
+      </tr>`).join('')
+    : '<tr><td colspan="7" class="muted" style="padding:24px;text-align:center">Nenhuma key encontrada.</td></tr>';
+}
+
+async function act(id, action) {
+  if (action === 'revoke' && !confirm('Revogar esta key? O cliente perde o acesso em até 1 minuto.')) return;
+  try {
+    await api(`/api/admin/keys/${id}/${action}`, { method: 'POST' });
+    toast('Feito.');
+    loadKeys(); loadStats(); loadEvents();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function extend(id) {
+  const days = prompt('Estender por quantos dias?', '30');
+  if (!days) return;
+  try {
+    await api(`/api/admin/keys/${id}/extend`, { method: 'POST', body: JSON.stringify({ days: parseFloat(days) }) });
+    toast('Validade estendida.');
+    loadKeys();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function del(id) {
+  if (!confirm('Apagar esta key definitivamente? Não dá para desfazer.')) return;
+  try {
+    await api(`/api/admin/keys/${id}`, { method: 'DELETE' });
+    toast('Key apagada.');
+    loadKeys(); loadStats();
+  } catch (e) { toast(e.message, true); }
+}
+
+// ------------------------------------------------------------
+// Eventos
+// ------------------------------------------------------------
+async function loadEvents() {
+  const d = await api('/api/admin/events?limit=40');
+  $('events-body').innerHTML = d.events.length
+    ? d.events.map((e) => `
+      <tr>
+        <td class="muted" style="white-space:nowrap">${new Date(e.at).toLocaleString('pt-BR')}</td>
+        <td><span class="pill p-${e.kind === 'activate' ? 'active' : e.kind === 'reject' ? 'revoked' : 'unused'}">${esc(e.kind)}</span></td>
+        <td><code>${esc(e.license_key || '—')}</code></td>
+        <td class="muted">${esc(e.detail || '')}</td>
+        <td class="muted mono">${esc(e.ip || '')}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" class="muted" style="padding:20px;text-align:center">Sem atividade ainda.</td></tr>';
+}
+
+// ------------------------------------------------------------
+// Boot
+// ------------------------------------------------------------
+function refreshAll() {
+  loadStats().catch((e) => toast(e.message, true));
+  loadKeys().catch((e) => toast(e.message, true));
+  loadEvents().catch((e) => toast(e.message, true));
+}
+
+$('filters').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  [...$('filters').children].forEach((b) => b.classList.remove('on'));
+  btn.classList.add('on');
+  statusFilter = btn.dataset.status;
+  loadKeys();
+});
+
+$('tok').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+
+if (TOKEN) {
+  api('/api/admin/stats')
+    .then(() => { $('gate').classList.add('hide'); $('app').classList.remove('hide'); refreshAll(); })
+    .catch(() => logout());
+}
+</script>
+</body>
+</html>
